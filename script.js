@@ -795,7 +795,29 @@ function runTease() {
   let dodges = 0;
   let clickAttempts = 0;
   let unlocked = false;
-  const duration = CONFIG.TEASE_SECONDS * 1000;
+  const rounds = [
+    {
+      from: 0,
+      to: 100,
+      duration: 7600,
+      title: "Analyzing your personality...",
+      line: "First scan. Definitely serious."
+    },
+    {
+      from: 40,
+      to: 100,
+      duration: 6200,
+      title: "Wait... result looked suspicious.",
+      line: "Restarting from 40%. Don't ask why."
+    },
+    {
+      from: 60,
+      to: 100,
+      duration: 5600,
+      title: "Final final check. Promise.",
+      line: "Starting from 60%. Very scientific."
+    }
+  ];
 
   const dodgeButton = (force = false) => {
     if (!force && dodges >= CONFIG.MAX_BUTTON_DODGES) return;
@@ -823,38 +845,45 @@ function runTease() {
     dom.scanLine.textContent = clickAttempts < 4 ? "The message is personal. Earn the suspense." : "Okay, okay... you are committed.";
   });
 
-  let start = performance.now();
-  let resetCount = 0;
+  let roundIndex = 0;
+  let roundStart = performance.now();
   let lastSecond = -1;
   const tick = (now) => {
     if (sceneMode !== "tease") return;
-    const elapsed = now - start;
-    const remaining = Math.max(0, Math.ceil((duration - elapsed) / 1000));
+    const round = rounds[roundIndex];
+    const elapsed = now - roundStart;
+    const totalRemaining = rounds.slice(roundIndex).reduce((sum, item, index) => {
+      return sum + (index === 0 ? Math.max(0, item.duration - elapsed) : item.duration);
+    }, 0);
+    const remaining = Math.max(0, Math.ceil(totalRemaining / 1000));
     const second = Math.floor(elapsed / 1000);
 
-    let percent = Math.min(99, Math.floor((elapsed / duration) * 100));
-    const shouldReset = (percent >= 96 && resetCount < 2) || (percent >= 72 && resetCount < 1);
-    if (shouldReset) {
-      resetCount += 1;
-      start = now - duration * (resetCount === 1 ? 0.22 : 0.54);
-      dom.scanTitle.textContent = resetCount === 1 ? "Wait... are you impatient?" : "Oops. Rechecking feelings.";
-      dom.scanLine.textContent = resetCount === 1 ? "Progress looked too confident." : "This is very serious nonsense.";
-      dom.teaseStatus.textContent = resetCount === 1 ? "Progress reset because you looked ready" : "Calibrating emotions... again";
-      percent = resetCount === 1 ? 22 : 54;
-    }
+    let percent = Math.min(100, Math.floor(THREE.MathUtils.lerp(round.from, round.to, elapsed / round.duration)));
 
     if (second !== lastSecond) {
       lastSecond = second;
-      if (second % 9 === 0 && second > 0) dodgeButton();
-      dom.scanTitle.textContent = titles[second % titles.length];
-      dom.scanLine.textContent = `Personal message unlocks in ${remaining}s`;
+      if (second % 5 === 0 && second > 0) dodgeButton();
+      dom.scanTitle.textContent = second < 2 ? round.title : titles[(second + roundIndex) % titles.length];
+      dom.scanLine.textContent = `${round.line} Unlock maybe in ${remaining}s`;
     }
 
-    if (elapsed >= duration) percent = 100;
     dom.progressBar.style.width = `${percent}%`;
     dom.progressText.textContent = `${percent}%`;
     if (second % 2 === 0) dom.teaseStatus.textContent = lines[Math.floor(now / 1450) % lines.length];
-    if (percent >= 100) {
+    if (elapsed >= round.duration && roundIndex < rounds.length - 1) {
+      roundIndex += 1;
+      roundStart = now;
+      lastSecond = -1;
+      const nextRound = rounds[roundIndex];
+      dom.progressBar.style.width = `${nextRound.from}%`;
+      dom.progressText.textContent = `${nextRound.from}%`;
+      dom.scanTitle.textContent = roundIndex === 1 ? "Nope. Too easy." : "Okay wait, one last thing.";
+      dom.scanLine.textContent = nextRound.line;
+      dom.teaseStatus.textContent = roundIndex === 1 ? "Progress got shy and jumped back." : "This is the actual last check. Maybe.";
+      setTimeout(() => requestAnimationFrame(tick), 850);
+      return;
+    }
+    if (elapsed >= round.duration) {
       unlocked = true;
       dom.scanTitle.textContent = "Fine. You passed.";
       dom.scanLine.textContent = "Opening the real message...";
