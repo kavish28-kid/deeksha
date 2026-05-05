@@ -56,12 +56,14 @@ button {
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  padding: 28px;
-  border: 1px solid rgba(0, 245, 255, 0.25);
-  border-radius: 8px;
-  background: linear-gradient(145deg, rgba(10, 14, 22, 0.88), rgba(18, 8, 26, 0.84));
-  box-shadow: 0 0 42px rgba(0, 245, 255, 0.12), inset 0 0 34px rgba(127, 0, 255, 0.08);
-  overflow: hidden;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+  text-align: center;
+  perspective: 900px;
 }
 
 .scan-shell::before {
@@ -75,20 +77,33 @@ button {
 
 .scan-topline {
   position: relative;
+  display: inline-flex;
+  padding: 8px 12px;
+  border: 1px solid rgba(0, 245, 255, 0.2);
+  border-radius: 999px;
+  background: rgba(5, 5, 8, 0.3);
+  backdrop-filter: blur(12px);
   color: var(--cyan);
   font-size: 0.78rem;
   font-weight: 800;
   letter-spacing: 0;
   text-transform: uppercase;
   margin-bottom: 12px;
+  transform: translateZ(22px);
 }
 
 .scan-shell h1 {
   position: relative;
   margin: 0 0 10px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  background: rgba(5, 5, 8, 0.32);
+  backdrop-filter: blur(14px);
   color: #fff;
   font-size: clamp(1.75rem, 5vw, 3rem);
   line-height: 1.02;
+  text-shadow: 0 0 18px rgba(0, 245, 255, 0.22);
+  transform: translateZ(44px);
 }
 
 .scan-shell p,
@@ -98,13 +113,25 @@ button {
   font-size: 0.98rem;
 }
 
+.scan-shell p {
+  display: inline-flex;
+  margin: 0;
+  padding: 7px 11px;
+  border-radius: 999px;
+  background: rgba(5, 5, 8, 0.25);
+  backdrop-filter: blur(12px);
+}
+
 .progress-wrap {
   position: relative;
   height: 14px;
   margin: 26px 0 10px;
+  border: 1px solid rgba(255, 255, 255, 0.11);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.09);
+  backdrop-filter: blur(12px);
   overflow: hidden;
+  transform: translateZ(30px);
 }
 
 .progress-bar {
@@ -120,6 +147,11 @@ button {
   gap: 14px;
   justify-content: space-between;
   min-height: 24px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: rgba(5, 5, 8, 0.24);
+  backdrop-filter: blur(12px);
+  transform: translateZ(26px);
 }
 
 .tease-button,
@@ -142,6 +174,8 @@ button {
 .tease-button {
   width: 150px;
   background: #fff;
+  box-shadow: 0 0 22px rgba(255, 255, 255, 0.22), 0 14px 40px rgba(0, 0, 0, 0.24);
+  transform: translateZ(55px);
 }
 
 .final-button {
@@ -156,6 +190,146 @@ button {
   border: 1px solid rgba(255, 255, 255, 0.22);
   background: rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(12px);
+}
+
+.anime-gate {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 22px;
+  background: radial-gradient(circle at 50% 45%, rgba(127, 0, 255, 0.18), rgba(0, 0, 0, 0.62) 62%);
+  transition: opacity 700ms ease, transform 700ms ease;
+}
+
+.anime-card {
+  width: min(92vw, 560px);
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 22px;
+  align-items: center;
+  padding: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  background: rgba(8, 7, 18, 0.62);
+  backdrop-filter: blur(20px);
+  box-shadow: 0 0 60px rgba(127, 0, 255, 0.24), 0 0 34px rgba(0, 245, 255, 0.12);
+  transform-style: preserve-3d;
+}
+
+.anime-character {
+  position: relative;
+  width: 104px;
+  height: 126px;
+  animation: animeFloat 1.8s ease-in-out infinite;
+}
+
+.antenna {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 2px;
+  height: 30px;
+  background: rgba(0, 245, 255, 0.85);
+  transform-origin: bottom;
+  transform: rotate(-10deg);
+  box-shadow: 0 0 12px rgba(0, 245, 255, 0.9);
+}
+
+.antenna::after {
+  content: "";
+  position: absolute;
+  top: -8px;
+  left: -5px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--pink);
+  box-shadow: 0 0 18px var(--pink);
+}
+
+.hair {
+  position: absolute;
+  left: 12px;
+  top: 24px;
+  width: 80px;
+  height: 56px;
+  border-radius: 50% 50% 34% 34%;
+  background: linear-gradient(135deg, #00f5ff 0%, #7f00ff 36%, #ff73c7 68%, #ff9f43 100%);
+  filter: drop-shadow(0 0 16px rgba(255, 115, 199, 0.46)) drop-shadow(0 0 12px rgba(0, 245, 255, 0.2));
+}
+
+.face {
+  position: absolute;
+  left: 18px;
+  top: 46px;
+  width: 70px;
+  height: 70px;
+  border-radius: 46% 46% 50% 50%;
+  background: #ffe7f6;
+  box-shadow: inset 0 -8px 0 rgba(255, 115, 199, 0.18);
+}
+
+.eye {
+  position: absolute;
+  top: 28px;
+  width: 10px;
+  height: 15px;
+  border-radius: 50%;
+  background: #191027;
+  box-shadow: 0 0 10px rgba(0, 245, 255, 0.55);
+  animation: blink 4.5s infinite;
+}
+
+.eye.left {
+  left: 20px;
+}
+
+.eye.right {
+  right: 20px;
+}
+
+.smile {
+  position: absolute;
+  left: 27px;
+  top: 48px;
+  width: 18px;
+  height: 9px;
+  border-bottom: 2px solid #191027;
+  border-radius: 0 0 999px 999px;
+}
+
+.gate-kicker,
+.eyes-kicker,
+.eyes-signature {
+  color: var(--cyan);
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.gate-line {
+  margin: 8px 0 16px;
+  color: #fff;
+  font-size: clamp(1.35rem, 4vw, 2.15rem);
+  font-weight: 800;
+  line-height: 1.06;
+}
+
+.gate-progress {
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+}
+
+.gate-progress span {
+  display: block;
+  width: 0%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--pink), #fff, var(--cyan));
+  box-shadow: 0 0 20px rgba(255, 115, 199, 0.55);
 }
 
 .blackout {
@@ -203,10 +377,16 @@ button {
 }
 
 .name-glow.visible,
-.final-line.visible,
-.glass-panel.visible {
+.glass-panel.visible,
+.anime-gate.visible {
   opacity: 1;
   transform: translateY(0);
+}
+
+.final-line.visible,
+.eyes-panel.visible {
+  opacity: 1;
+  transform: translate(-50%, 0);
 }
 
 .countup {
@@ -255,7 +435,7 @@ button {
 .final-line {
   position: fixed;
   left: 50%;
-  top: 18vh;
+  top: 13vh;
   transform: translate(-50%, 12px);
   width: min(92vw, 780px);
   color: #fff;
@@ -266,6 +446,33 @@ button {
   text-shadow: 0 0 22px rgba(255, 115, 199, 0.8), 0 0 60px rgba(0, 245, 255, 0.35);
   opacity: 0;
   transition: opacity 1400ms ease, transform 1400ms ease;
+}
+
+.eyes-panel {
+  position: fixed;
+  left: 50%;
+  bottom: 8vh;
+  transform: translate(-50%, 20px);
+  width: min(92vw, 840px);
+  padding: clamp(24px, 5vw, 42px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  background: rgba(5, 5, 10, 0.34);
+  backdrop-filter: blur(18px);
+  text-align: center;
+  box-shadow: 0 0 80px rgba(0, 245, 255, 0.12), 0 0 90px rgba(255, 115, 199, 0.16);
+  transition: opacity 1200ms ease, transform 1200ms ease;
+}
+
+.eyes-quote {
+  margin: 12px auto 16px;
+  color: #fff;
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: clamp(1.65rem, 5vw, 4rem);
+  line-height: 1.08;
+  white-space: pre-line;
+  text-wrap: balance;
+  text-shadow: 0 0 20px rgba(0, 245, 255, 0.36), 0 0 42px rgba(255, 115, 199, 0.34);
 }
 
 .hidden {
@@ -279,10 +486,63 @@ button {
   }
 }
 
+@keyframes animeFloat {
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes blink {
+  0%,
+  92%,
+  100% {
+    transform: scaleY(1);
+  }
+
+  95% {
+    transform: scaleY(0.1);
+  }
+}
+
 @media (max-width: 700px) {
+  .scan-shell {
+    top: 48%;
+    width: min(90vw, 420px);
+  }
+
+  .scan-shell h1 {
+    font-size: clamp(1.6rem, 8vw, 2.4rem);
+    line-height: 1.04;
+  }
+
+  .progress-meta {
+    align-items: center;
+    flex-direction: column;
+    gap: 4px;
+    text-align: center;
+  }
+
+  .tease-button,
+  .final-button,
+  .ghost-button {
+    min-height: 48px;
+    max-width: 92vw;
+  }
+
   .love-screen {
     place-items: center;
-    padding-bottom: 18vh;
+    padding: 12vh 14px 18vh;
+  }
+
+  .glass-panel {
+    width: min(94vw, 520px);
+    max-height: 58vh;
+    overflow: auto;
+    padding: 22px 16px;
+  }
+
+  .typewriter {
+    font-size: clamp(1.36rem, 7vw, 2.15rem);
   }
 
   .photo-gallery {
@@ -292,5 +552,38 @@ button {
 
   .memory-card:nth-child(n + 4) {
     display: none;
+  }
+
+  .anime-card {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    text-align: center;
+    padding: 20px 16px;
+  }
+
+  .anime-character {
+    width: 92px;
+    height: 110px;
+  }
+
+  .gate-line {
+    font-size: clamp(1.18rem, 7vw, 1.7rem);
+  }
+
+  .eyes-panel {
+    bottom: 6vh;
+    width: 94vw;
+    max-height: 56vh;
+    overflow: auto;
+    padding: 22px 16px;
+  }
+
+  .eyes-quote {
+    font-size: clamp(1.34rem, 7vw, 2.2rem);
+  }
+
+  .final-line {
+    top: 9vh;
+    font-size: clamp(2rem, 12vw, 3.6rem);
   }
 }

@@ -7,6 +7,8 @@ import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 
 const CONFIG = {
   HER_NAME: "Her Name",
+  NICKNAME: "Alien",
+  ANIME_MUSE: "Sanemi and Ace",
   TEASE_SECONDS: 65,
   MAX_BUTTON_DODGES: 14,
   YOUR_MESSAGE: [
@@ -20,6 +22,13 @@ const CONFIG = {
     "I love you."
   ],
   EXTRA_MESSAGE: "Every moment with you feels different... better.",
+  EYES_REVEAL: [
+    "To the right eyes, you are art.",
+    "And I swear...",
+    "I love your eyes so much.",
+    "People say they see the world with two eyes...",
+    "but somehow, my whole world is in yours."
+  ],
   MUSIC_URL: "",
   VOICE_URL: "",
   PHOTO_URLS: []
@@ -49,6 +58,11 @@ const dom = {
   gallery: document.querySelector("#photoGallery"),
   finalBtn: document.querySelector("#finalBtn"),
   voiceBtn: document.querySelector("#voiceBtn"),
+  animeGate: document.querySelector("#animeGate"),
+  gateLine: document.querySelector("#gateLine"),
+  gateProgress: document.querySelector("#gateProgress"),
+  eyesPanel: document.querySelector("#eyesPanel"),
+  eyesQuote: document.querySelector("#eyesQuote"),
   finalLine: document.querySelector("#finalLine")
 };
 
@@ -90,12 +104,14 @@ const stars = createStars();
 const glitchShapes = createGlitchShapes();
 const heart = createHeart();
 const heartField = createHeartField();
+const eyePortal = createEyePortal();
 const nameCloud = createNameParticles(CONFIG.HER_NAME);
 const burst = createBurst();
-scene.add(nebula, stars, glitchShapes, heartField, heart, nameCloud, burst);
+scene.add(nebula, stars, glitchShapes, heartField, heart, eyePortal, nameCloud, burst);
 
 heart.visible = false;
 heartField.visible = false;
+eyePortal.visible = false;
 nameCloud.visible = false;
 burst.visible = false;
 
@@ -225,7 +241,8 @@ function createGlitchShapes() {
     new THREE.MeshBasicMaterial({ color: 0x7f00ff, wireframe: true, transparent: true, opacity: 0.38 }),
     new THREE.MeshBasicMaterial({ color: 0xff73c7, wireframe: true, transparent: true, opacity: 0.34 })
   ];
-  for (let i = 0; i < 16; i++) {
+  const count = isLowPower ? 14 : 28;
+  for (let i = 0; i < count; i++) {
     const mesh = new THREE.Mesh(i % 3 === 0 ? knot : cube, materials[i % materials.length]);
     mesh.position.set(THREE.MathUtils.randFloatSpread(18), THREE.MathUtils.randFloatSpread(10), THREE.MathUtils.randFloat(-18, -5));
     mesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
@@ -380,6 +397,66 @@ function createHeartField() {
     mesh.userData.seed = Math.random() * 100;
     group.add(mesh);
   }
+  return group;
+}
+
+function createEyePortal() {
+  const group = new THREE.Group();
+  const irisMaterial = new THREE.ShaderMaterial({
+    transparent: true,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    uniforms: {
+      uTime: { value: 0 },
+      uOpacity: { value: 0 }
+    },
+    vertexShader: `
+      varying vec2 vUv;
+      void main() {
+        vUv = uv;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      precision highp float;
+      varying vec2 vUv;
+      uniform float uTime;
+      uniform float uOpacity;
+      void main() {
+        vec2 uv = vUv - 0.5;
+        uv.x *= 1.55;
+        float d = length(uv);
+        float ring = smoothstep(0.52, 0.22, d);
+        float pupil = 1.0 - smoothstep(0.06, 0.18, d);
+        float rays = 0.5 + 0.5 * sin(atan(uv.y, uv.x) * 18.0 + uTime * 1.4);
+        vec3 cyan = vec3(0.0, 0.96, 1.0);
+        vec3 violet = vec3(0.42, 0.0, 1.0);
+        vec3 pink = vec3(1.0, 0.35, 0.78);
+        vec3 color = mix(violet, cyan, rays) * ring + pink * pow(ring, 2.0);
+        color *= 1.0 - pupil * 0.72;
+        float alpha = smoothstep(0.58, 0.50, d) * smoothstep(0.02, 0.13, d) * uOpacity;
+        gl_FragColor = vec4(color, alpha);
+      }
+    `
+  });
+  const iris = new THREE.Mesh(new THREE.CircleGeometry(3.2, 96), irisMaterial);
+  group.add(iris);
+
+  const ringMaterial = new THREE.MeshBasicMaterial({
+    color: 0x00f5ff,
+    transparent: true,
+    opacity: 0,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+  });
+  for (let i = 0; i < 4; i++) {
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(3.35 + i * 0.24, 0.01 + i * 0.005, 8, 160), ringMaterial.clone());
+    ring.rotation.z = i * 0.6;
+    ring.userData.spin = (i % 2 ? -1 : 1) * (0.05 + i * 0.025);
+    group.add(ring);
+  }
+  group.position.set(0, 0.25, -7.2);
+  group.scale.setScalar(0.12);
   return group;
 }
 
@@ -655,11 +732,29 @@ async function typeLines(lines) {
   }
 }
 
+async function runEyesReveal() {
+  const lines = CONFIG.EYES_REVEAL;
+  dom.eyesQuote.textContent = "";
+  dom.eyesPanel.classList.remove("hidden");
+  requestAnimationFrame(() => dom.eyesPanel.classList.add("visible"));
+  for (const line of lines) {
+    await typeTextTo(dom.eyesQuote, `${line}\n`);
+    await wait(line.length > 40 ? 1050 : 780);
+  }
+  await wait(900);
+  dom.finalLine.classList.remove("hidden");
+  requestAnimationFrame(() => dom.finalLine.classList.add("visible"));
+}
+
 function typeText(text) {
+  return typeTextTo(dom.typewriter, text);
+}
+
+function typeTextTo(target, text) {
   return new Promise((resolve) => {
     let i = 0;
     const tick = () => {
-      dom.typewriter.textContent += text[i] || "";
+      target.textContent += text[i] || "";
       i += 1;
       if (i < text.length) setTimeout(tick, text[i - 1] === "." ? 92 : 46);
       else resolve();
@@ -682,14 +777,47 @@ function animateUniform(uniform, target, duration, delay = 0) {
 dom.finalBtn.addEventListener("click", () => {
   dom.finalBtn.classList.add("hidden");
   dom.voiceBtn.classList.add("hidden");
-  dom.finalLine.classList.remove("hidden");
-  requestAnimationFrame(() => dom.finalLine.classList.add("visible"));
   burst.visible = true;
   burst.material.uniforms.uTime.value = 0;
   burst.material.uniforms.uActive.value = 1;
   finalBloom = 2.2;
-  camera.userData.zooming = true;
+  startAnimeGate();
 });
+
+function startAnimeGate() {
+  const lines = [
+    `Hold on, ${CONFIG.NICKNAME}.`,
+    "You clicked too confidently.",
+    "Tiny anime assistant is judging your patience.",
+    `Consulting ${CONFIG.ANIME_MUSE} energy...`,
+    "Wind mode: dramatic.",
+    "Fire mode: too emotional.",
+    "Okay. This part is only for your eyes."
+  ];
+  dom.messagePanel.classList.add("hidden");
+  dom.animeGate.classList.remove("hidden");
+  requestAnimationFrame(() => dom.animeGate.classList.add("visible"));
+  let start = performance.now();
+  const duration = 7600;
+  const tick = (now) => {
+    const t = THREE.MathUtils.clamp((now - start) / duration, 0, 1);
+    dom.gateProgress.style.width = `${Math.floor(t * 100)}%`;
+    dom.gateLine.textContent = lines[Math.min(lines.length - 1, Math.floor(t * lines.length))];
+    if (t < 1) {
+      requestAnimationFrame(tick);
+      return;
+    }
+    dom.animeGate.classList.remove("visible");
+    setTimeout(() => {
+      dom.animeGate.classList.add("hidden");
+      eyePortal.visible = true;
+      camera.userData.zooming = true;
+      finalBloom = 1.6;
+      runEyesReveal();
+    }, 720);
+  };
+  requestAnimationFrame(tick);
+}
 
 addEventListener("pointermove", (event) => {
   mouse.x = (event.clientX / innerWidth - 0.5) * 2;
@@ -715,6 +843,7 @@ function animate() {
   nebula.material.uniforms.uTime.value = elapsed;
   stars.material.uniforms.uTime.value = elapsed;
   nameCloud.material.uniforms.uTime.value = elapsed;
+  eyePortal.children[0].material.uniforms.uTime.value = elapsed;
 
   glitchShapes.children.forEach((mesh, index) => {
     const speed = mesh.userData.speed;
@@ -739,6 +868,14 @@ function animate() {
       mesh.rotation.z += delta * 0.08;
       mesh.material.opacity = 0.18 + Math.sin(elapsed * 0.8 + seed) * 0.08;
     });
+    if (eyePortal.visible) {
+      eyePortal.scale.setScalar(THREE.MathUtils.lerp(eyePortal.scale.x, 1, 0.035));
+      eyePortal.children[0].material.uniforms.uOpacity.value = THREE.MathUtils.lerp(eyePortal.children[0].material.uniforms.uOpacity.value, 0.86, 0.035);
+      eyePortal.children.slice(1).forEach((ring) => {
+        ring.rotation.z += delta * ring.userData.spin;
+        ring.material.opacity = THREE.MathUtils.lerp(ring.material.opacity, 0.28, 0.03);
+      });
+    }
   }
 
   const driftZ = sceneMode === "love" ? -Math.min(4, elapsed * 0.035) : 0;
