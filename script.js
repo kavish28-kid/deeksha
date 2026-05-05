@@ -38,6 +38,13 @@ const CONFIG = {
     "So if this website feels extra...",
     "it's because normal words felt too small for you."
   ],
+  ANIME_LOVE_LINES: [
+    "Sanemi has that storm kind of strength.",
+    "Ace has that fire that refuses to disappear.",
+    "And you, Alien...",
+    "you somehow became both comfort and chaos to me.",
+    "my soft place, my favorite trouble, my whole universe."
+  ],
   EXTRA_MESSAGE: "Every moment with you feels different... better.",
   EYES_REVEAL: [
     "To the right eyes, you are art.",
@@ -139,13 +146,15 @@ const stars = createStars();
 const glitchShapes = createGlitchShapes();
 const heart = createHeart();
 const heartField = createHeartField();
+const animeAura = createAnimeAura();
 const eyePortal = createEyePortal();
 const nameCloud = createNameParticles(CONFIG.HER_NAME);
 const burst = createBurst();
-scene.add(nebula, stars, glitchShapes, heartField, heart, eyePortal, nameCloud, burst);
+scene.add(nebula, stars, glitchShapes, heartField, animeAura, heart, eyePortal, nameCloud, burst);
 
 heart.visible = false;
 heartField.visible = false;
+animeAura.visible = false;
 eyePortal.visible = false;
 nameCloud.visible = false;
 burst.visible = false;
@@ -497,6 +506,82 @@ function createEyePortal() {
   return group;
 }
 
+function createAnimeAura() {
+  const group = new THREE.Group();
+  const makeRibbon = (side, colorA, colorB) => {
+    const geometry = new THREE.PlaneGeometry(1.35, 7.8, 1, 72);
+    const material = new THREE.ShaderMaterial({
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      side: THREE.DoubleSide,
+      uniforms: {
+        uTime: { value: 0 },
+        uOpacity: { value: 0 },
+        uColorA: { value: new THREE.Color(colorA) },
+        uColorB: { value: new THREE.Color(colorB) },
+        uSide: { value: side }
+      },
+      vertexShader: `
+        uniform float uTime;
+        uniform float uSide;
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          vec3 p = position;
+          float wave = sin(uv.y * 11.0 + uTime * (1.6 + abs(uSide) * 0.2));
+          p.x += wave * 0.42 + sin(uv.y * 4.0 + uTime) * 0.18;
+          p.z += cos(uv.y * 9.0 + uTime * 1.2) * 0.36;
+          p.y += sin(uTime * 0.8 + uv.y * 6.0) * 0.12;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
+        }
+      `,
+      fragmentShader: `
+        precision highp float;
+        varying vec2 vUv;
+        uniform float uOpacity;
+        uniform vec3 uColorA;
+        uniform vec3 uColorB;
+        void main() {
+          float edge = smoothstep(0.0, 0.36, vUv.x) * smoothstep(1.0, 0.64, vUv.x);
+          float tail = smoothstep(0.0, 0.12, vUv.y) * smoothstep(1.0, 0.16, vUv.y);
+          vec3 color = mix(uColorA, uColorB, vUv.y);
+          gl_FragColor = vec4(color, edge * tail * uOpacity * 0.48);
+        }
+      `
+    });
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.position.set(side * 3.2, 0.35, -6.2);
+    mesh.rotation.z = side * -0.34;
+    mesh.rotation.y = side * 0.36;
+    mesh.userData.baseX = mesh.position.x;
+    return mesh;
+  };
+
+  const wind = makeRibbon(-1, 0x00f5ff, 0xdafcff);
+  const fire = makeRibbon(1, 0xff7a2f, 0xff73c7);
+  group.add(wind, fire);
+
+  const sigilMaterial = new THREE.MeshBasicMaterial({
+    color: 0xffffff,
+    transparent: true,
+    opacity: 0,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+  });
+  const windRing = new THREE.Mesh(new THREE.TorusGeometry(1.55, 0.018, 8, 96), sigilMaterial.clone());
+  const fireRing = new THREE.Mesh(new THREE.TorusGeometry(1.55, 0.018, 8, 96), sigilMaterial.clone());
+  windRing.position.set(-3.2, -2.75, -6.1);
+  fireRing.position.set(3.2, -2.75, -6.1);
+  windRing.userData.spin = -0.55;
+  fireRing.userData.spin = 0.55;
+  group.add(windRing, fireRing);
+
+  group.userData.wind = wind;
+  group.userData.fire = fire;
+  return group;
+}
+
 function createBurst() {
   const count = isLowPower ? 1100 : 2400;
   const geometry = new THREE.BufferGeometry();
@@ -748,6 +833,8 @@ async function revealLoveWorld() {
     "",
     ...CONFIG.LOVE_CHAPTERS,
     "",
+    ...CONFIG.ANIME_LOVE_LINES,
+    "",
     CONFIG.EXTRA_MESSAGE
   ]);
   nameCloud.material.uniforms.uPulse.value = 1;
@@ -884,8 +971,9 @@ function startAnimeGate() {
     `Wait, ${CONFIG.NICKNAME}. Secret route detected.`,
     "You clicked genuinely love me way too confidently.",
     "Tiny anime AI is opening the forbidden feelings file.",
-    "Sanemi wind check: she survived the tease.",
-    "Ace fire check: emotional damage loading.",
+    "Sanemi wind check: courage level unlocked.",
+    "Ace fire check: warmth level dangerous.",
+    "Combining wind + fire into one Alien-only reveal.",
     "Imagine counting to seven... slowly.",
     "7... 6... 5...",
     "4... 3...",
@@ -894,6 +982,8 @@ function startAnimeGate() {
     "Okay. This next part is only for her eyes."
   ];
   dom.messagePanel.classList.add("hidden");
+  animeAura.visible = true;
+  finalBloom = Math.max(finalBloom, 0.7);
   dom.animeGate.classList.remove("hidden");
   requestAnimationFrame(() => dom.animeGate.classList.add("visible"));
   let start = performance.now();
@@ -912,6 +1002,7 @@ function startAnimeGate() {
     setTimeout(() => {
       dom.animeGate.classList.add("hidden");
       eyePortal.visible = true;
+      animeAura.userData.fadeAfterGate = true;
       camera.userData.zooming = true;
       finalBloom = 0.9;
       runEyesReveal();
@@ -946,6 +1037,9 @@ function animate() {
     stars.material.uniforms.uTime.value = elapsed;
     nameCloud.material.uniforms.uTime.value = elapsed;
     eyePortal.children[0].material.uniforms.uTime.value = elapsed;
+    animeAura.children.forEach((mesh) => {
+      if (mesh.material.uniforms?.uTime) mesh.material.uniforms.uTime.value = elapsed;
+    });
   }
 
   glitchShapes.children.forEach((mesh, index) => {
@@ -983,6 +1077,17 @@ function animate() {
       eyePortal.children.slice(1).forEach((ring) => {
         ring.rotation.z += delta * ring.userData.spin;
         ring.material.opacity = THREE.MathUtils.lerp(ring.material.opacity, 0.28, 0.03);
+      });
+    }
+    if (animeAura.visible) {
+      const targetOpacity = animeAura.userData.fadeAfterGate ? 0.18 : 0.9;
+      animeAura.children.forEach((mesh, index) => {
+        mesh.rotation.z += delta * (mesh.userData.spin || (index === 0 ? -0.035 : 0.035));
+        if (mesh.material.uniforms?.uOpacity) {
+          mesh.material.uniforms.uOpacity.value = THREE.MathUtils.lerp(mesh.material.uniforms.uOpacity.value, targetOpacity, 0.035);
+        } else {
+          mesh.material.opacity = THREE.MathUtils.lerp(mesh.material.opacity, targetOpacity * 0.22, 0.035);
+        }
       });
     }
   }
