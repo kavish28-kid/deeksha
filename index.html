@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>A Tiny Universe</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <canvas id="webgl"></canvas>
+
+    <main id="app">
+      <section id="tease" class="screen active" aria-live="polite">
+        <div class="scan-shell">
+          <div class="scan-topline">AI Emotion Console</div>
+          <h1 id="scanTitle">Analyzing your behavior...</h1>
+          <p id="scanLine">Checking patience level...</p>
+          <div class="progress-wrap">
+            <div id="progressBar" class="progress-bar"></div>
+          </div>
+          <div class="progress-meta">
+            <span id="progressText">0%</span>
+            <span id="teaseStatus">Still loading your patience...</span>
+          </div>
+          <button id="continueBtn" class="tease-button" type="button">Continue</button>
+        </div>
+      </section>
+
+      <section id="blackout" class="screen blackout" aria-hidden="true"></section>
+
+      <section id="love" class="screen love-screen" aria-live="polite">
+        <div id="messagePanel" class="glass-panel hidden">
+          <div id="typewriter" class="typewriter"></div>
+          <div id="nameGlow" class="name-glow"></div>
+          <div id="countup" class="countup"></div>
+        </div>
+
+        <div id="photoGallery" class="photo-gallery" aria-label="Photo memories"></div>
+
+        <div class="action-row">
+          <button id="voiceBtn" class="ghost-button hidden" type="button">Play voice message</button>
+          <button id="finalBtn" class="final-button hidden" type="button">Click if you still love me</button>
+        </div>
+
+        <div id="finalLine" class="final-line hidden">I'll always choose you.</div>
+      </section>
+    </main>
+
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.183.2/build/three.module.js",
+          "three/addons/": "https://unpkg.com/three@0.183.2/examples/jsm/"
+        }
+      }
+    </script>
+    <script type="module" src="./script.js"></script>
+  </body>
+</html>
