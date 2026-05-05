@@ -29,7 +29,8 @@ const CONFIG = {
     "People say they see the world with two eyes...",
     "but somehow, my whole world is in yours."
   ],
-  MUSIC_URL: "",
+  MUSIC_URL: "./assets/shiddat-title-track.mp3",
+  MUSIC_VOLUME: 0.11,
   VOICE_URL: "",
   PHOTO_URLS: []
 };
@@ -646,7 +647,7 @@ async function beginAudio() {
   if (CONFIG.MUSIC_URL) {
     music = new Audio(CONFIG.MUSIC_URL);
     music.loop = true;
-    music.volume = 0.16;
+    music.volume = CONFIG.MUSIC_VOLUME;
     music.play().catch(() => {});
   }
 }
