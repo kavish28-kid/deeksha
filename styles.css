@@ -352,6 +352,34 @@ button {
   font-size: 0.95rem;
 }
 
+.anime-energy {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 0 0 16px;
+}
+
+.anime-energy span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 0.78rem;
+  font-weight: 800;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.anime-energy span:first-child {
+  box-shadow: inset 0 0 18px rgba(0, 245, 255, 0.12), 0 0 18px rgba(0, 245, 255, 0.08);
+}
+
+.anime-energy span:last-child {
+  box-shadow: inset 0 0 18px rgba(255, 159, 67, 0.14), 0 0 18px rgba(255, 115, 199, 0.08);
+}
+
 .gate-progress {
   height: 10px;
   border-radius: 999px;
@@ -654,6 +682,10 @@ button {
 
   .gate-line {
     font-size: clamp(1.18rem, 7vw, 1.7rem);
+  }
+
+  .anime-energy {
+    justify-content: center;
   }
 
   .eyes-panel {

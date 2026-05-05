@@ -22,6 +22,22 @@ const CONFIG = {
     "You mean more to me than words can explain.",
     "I love you."
   ],
+  LOVE_CHAPTERS: [
+    "There are things I notice quietly...",
+    "the way one thought of you can fix my whole mood.",
+    "",
+    "I love the parts of you you probably don't even think about.",
+    "your reactions, your little moods, your softness, your chaos.",
+    "",
+    "If love had a map,",
+    "mine would keep finding its way back to you.",
+    "",
+    "I don't want to be just another person in your day.",
+    "I want to be the calm place your heart remembers.",
+    "",
+    "So if this website feels extra...",
+    "it's because normal words felt too small for you."
+  ],
   EXTRA_MESSAGE: "Every moment with you feels different... better.",
   EYES_REVEAL: [
     "To the right eyes, you are art.",
@@ -29,10 +45,19 @@ const CONFIG = {
     "I love your eyes so much...",
     "people say they see the world with two eyes,",
     "but why does my whole world exist in yours?",
+    "",
+    "Maybe that's why I stare in my thoughts sometimes.",
+    "Because your eyes don't just look beautiful...",
+    "they make everything else disappear for a second.",
+    "",
     "When I look at you, everything loud becomes quiet.",
     "Like the universe finally found the place it was trying to reach.",
     "Alien, your eyes are not just beautiful to me...",
-    "they feel like home."
+    "they feel like home.",
+    "",
+    "And if one day you forget how special you are,",
+    "come back here.",
+    "I'll let this universe remind you again."
   ],
   MUSIC_URL: "./assets/shiddat-title-track.mp3",
   MUSIC_VOLUME: 0.28,
@@ -720,6 +745,9 @@ async function revealLoveWorld() {
     "I just wanted to make you smile first...",
     "",
     ...CONFIG.YOUR_MESSAGE,
+    "",
+    ...CONFIG.LOVE_CHAPTERS,
+    "",
     CONFIG.EXTRA_MESSAGE
   ]);
   nameCloud.material.uniforms.uPulse.value = 1;
@@ -790,8 +818,22 @@ async function runEyesReveal() {
   dom.eyesQuote.textContent = "";
   dom.eyesPanel.classList.remove("hidden");
   requestAnimationFrame(() => dom.eyesPanel.classList.add("visible"));
+  let visibleLines = 0;
   for (const line of lines) {
-    await typeTextTo(dom.eyesQuote, `${line}\n`);
+    if (line === "") {
+      await wait(700);
+      dom.eyesQuote.textContent = "";
+      visibleLines = 0;
+      continue;
+    }
+    if (visibleLines >= 3) {
+      await wait(700);
+      dom.eyesQuote.textContent = "";
+      visibleLines = 0;
+    }
+    if (visibleLines > 0) dom.eyesQuote.textContent += "\n";
+    await typeTextTo(dom.eyesQuote, line);
+    visibleLines += 1;
     await wait(line.length > 40 ? 1050 : 780);
   }
   await wait(900);
