@@ -7,7 +7,8 @@ import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 
 const CONFIG = {
   HER_NAME: "Her Name",
-  MEETING_DATE: "2024-01-01T00:00:00",
+  TEASE_SECONDS: 65,
+  MAX_BUTTON_DODGES: 14,
   YOUR_MESSAGE: [
     "Okay okay... I'll stop teasing you",
     "I just wanted to make you smile first...",
@@ -45,7 +46,6 @@ const dom = {
   messagePanel: document.querySelector("#messagePanel"),
   typewriter: document.querySelector("#typewriter"),
   nameGlow: document.querySelector("#nameGlow"),
-  countup: document.querySelector("#countup"),
   gallery: document.querySelector("#photoGallery"),
   finalBtn: document.querySelector("#finalBtn"),
   voiceBtn: document.querySelector("#voiceBtn"),
@@ -441,45 +441,93 @@ function runTease() {
     "Almost done... maybe",
     "You're still here?",
     "Impatient detected",
-    "Okay fine, last check..."
+    "Checking if you deserve the message...",
+    "Suspiciously cute behavior found",
+    "Nope. One more scan.",
+    "System says: wait nicely",
+    "Your patience level is buffering",
+    "Personal message locked for dramatic effect",
+    "Do not fight the button. The button is shy.",
+    "Okay fine, last emotional security check..."
+  ];
+  const titles = [
+    "Analyzing your personality...",
+    "Checking patience level...",
+    "Scanning dramatic reactions...",
+    "Verifying smile probability...",
+    "Auditing attitude...",
+    "Unlocking something important..."
   ];
   let dodges = 0;
-  dom.continueBtn.addEventListener("mouseenter", () => {
-    if (dodges >= 3) return;
+  let clickAttempts = 0;
+  let unlocked = false;
+  const duration = CONFIG.TEASE_SECONDS * 1000;
+
+  const dodgeButton = (force = false) => {
+    if (!force && dodges >= CONFIG.MAX_BUTTON_DODGES) return;
     dodges += 1;
-    dom.continueBtn.style.transform = `translate(${18 * dodges}px, ${dodges % 2 ? -7 : 8}px)`;
-    dom.teaseStatus.textContent = lines[Math.min(dodges + 1, lines.length - 1)];
-  });
-  dom.continueBtn.addEventListener("click", () => {
-    if (dodges < 2) {
-      dodges += 1;
-      dom.continueBtn.style.transform = `translate(${24 * dodges}px, ${dodges % 2 ? 8 : -8}px)`;
-      dom.teaseStatus.textContent = "Just 2 more seconds...";
-      return;
-    }
-    startBlackout();
+    const x = THREE.MathUtils.randFloat(-96, 96);
+    const y = THREE.MathUtils.randFloat(-34, 34);
+    const rotate = THREE.MathUtils.randFloat(-3, 3);
+    dom.continueBtn.style.transform = `translate(${x}px, ${y}px) rotate(${rotate}deg)`;
+    dom.teaseStatus.textContent = lines[dodges % lines.length];
+  };
+
+  dom.continueBtn.addEventListener("mouseenter", () => {
+    if (unlocked) return;
+    dodgeButton();
   });
 
-  let resetDone = false;
+  dom.continueBtn.addEventListener("click", () => {
+    if (unlocked) {
+      startBlackout();
+      return;
+    }
+    clickAttempts += 1;
+    dodgeButton(true);
+    dom.scanTitle.textContent = clickAttempts % 2 ? "Access denied, obviously." : "Nice try.";
+    dom.scanLine.textContent = clickAttempts < 4 ? "The message is personal. Earn the suspense." : "Okay, okay... you are committed.";
+  });
+
   let start = performance.now();
+  let resetCount = 0;
+  let lastSecond = -1;
   const tick = (now) => {
     if (sceneMode !== "tease") return;
-    let elapsed = now - start;
-    let percent = Math.min(99, Math.floor(elapsed / 70));
-    if (percent >= 95 && !resetDone) {
-      resetDone = true;
-      dom.scanTitle.textContent = "Wait... are you impatient?";
-      dom.scanLine.textContent = "Calibrating emotions...";
-      dom.teaseStatus.textContent = "Impatient detected";
-      percent = 28;
-      start = now - percent * 70;
+    const elapsed = now - start;
+    const remaining = Math.max(0, Math.ceil((duration - elapsed) / 1000));
+    const second = Math.floor(elapsed / 1000);
+
+    let percent = Math.min(99, Math.floor((elapsed / duration) * 100));
+    const shouldReset = (percent >= 96 && resetCount < 2) || (percent >= 72 && resetCount < 1);
+    if (shouldReset) {
+      resetCount += 1;
+      start = now - duration * (resetCount === 1 ? 0.22 : 0.54);
+      dom.scanTitle.textContent = resetCount === 1 ? "Wait... are you impatient?" : "Oops. Rechecking feelings.";
+      dom.scanLine.textContent = resetCount === 1 ? "Progress looked too confident." : "This is very serious nonsense.";
+      dom.teaseStatus.textContent = resetCount === 1 ? "Progress reset because you looked ready" : "Calibrating emotions... again";
+      percent = resetCount === 1 ? 22 : 54;
     }
-    if (elapsed > 11200) percent = 100;
+
+    if (second !== lastSecond) {
+      lastSecond = second;
+      if (second % 9 === 0 && second > 0) dodgeButton();
+      dom.scanTitle.textContent = titles[second % titles.length];
+      dom.scanLine.textContent = `Personal message unlocks in ${remaining}s`;
+    }
+
+    if (elapsed >= duration) percent = 100;
     dom.progressBar.style.width = `${percent}%`;
     dom.progressText.textContent = `${percent}%`;
-    dom.teaseStatus.textContent = lines[Math.floor(now / 1700) % lines.length];
+    if (second % 2 === 0) dom.teaseStatus.textContent = lines[Math.floor(now / 1450) % lines.length];
     if (percent >= 100) {
-      startBlackout();
+      unlocked = true;
+      dom.scanTitle.textContent = "Fine. You passed.";
+      dom.scanLine.textContent = "Opening the real message...";
+      dom.teaseStatus.textContent = "Silence in 3... 2... 1...";
+      dom.continueBtn.textContent = "Open it";
+      dom.continueBtn.style.transform = "translate(0, 0)";
+      setTimeout(startBlackout, 1300);
       return;
     }
     requestAnimationFrame(tick);
@@ -656,15 +704,6 @@ addEventListener("resize", () => {
   nebula.material.uniforms.uResolution.value.set(innerWidth, innerHeight);
 });
 
-function updateCountup() {
-  const from = new Date(CONFIG.MEETING_DATE).getTime();
-  if (!Number.isFinite(from)) return;
-  const diff = Math.max(0, Date.now() - from);
-  const days = Math.floor(diff / 86400000);
-  const hours = Math.floor((diff % 86400000) / 3600000);
-  dom.countup.textContent = `${days.toLocaleString()} days and ${hours} hours since this story began`;
-}
-
 function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -718,7 +757,6 @@ function animate() {
   finalBloom = Math.max(0, finalBloom - delta * 1.4);
   bloomPass.strength = 0.75 + finalBloom;
   nameCloud.material.uniforms.uPulse.value = THREE.MathUtils.lerp(nameCloud.material.uniforms.uPulse.value, 0, 0.035);
-  updateCountup();
   composer.render();
   requestAnimationFrame(animate);
 }
