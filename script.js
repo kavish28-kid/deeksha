@@ -9,8 +9,13 @@ const CONFIG = {
   HER_NAME: "Alien",
   NICKNAME: "Alien",
   ANIME_MUSE: "Sanemi and Ace",
-  TEASE_SECONDS: 65,
-  MAX_BUTTON_DODGES: 14,
+  TEASE_SECONDS: 12,
+  MAX_BUTTON_DODGES: 4,
+  GUIDE_LINES: [
+    "Hey... don't mind the chaos earlier.",
+    "He's just... bad at saying things directly.",
+    "But I'll show you what he really means."
+  ],
   YOUR_MESSAGE: [
     "This was only for you, Alien.",
     "Okay okay... I'll stop teasing you",
@@ -47,18 +52,30 @@ const CONFIG = {
     "you somehow became both comfort and chaos to me.",
     "my soft place, my favorite trouble, my whole universe."
   ],
-  REASSURANCE_LINES: [
-    "If your mind ever gets loud,",
-    "you don't have to explain every feeling perfectly.",
+  SAFE_ZONE_LINES: [
+    "Sometimes you get quiet...",
+    "Sometimes you think too much...",
+    "Sometimes you doubt things...",
     "",
-    "If you overthink, I'll slow down with you.",
-    "If you feel insecure, I'll remind you gently.",
+    "But even then...",
+    "you're still the most beautiful soul I know.",
     "",
-    "If something breaks inside you,",
-    "I won't love you less for needing time.",
+    "You don't have to over-explain your heart here.",
+    "I'll listen slowly. I'll stay softly.",
     "",
-    "You are not too much, Alien.",
-    "You are someone I want to understand."
+    "Even on the days you feel hard to love,",
+    "I would still choose to understand you."
+  ],
+  HER_WORLD_LINES: [
+    "This... is his world.",
+    "And somehow...",
+    "you're everywhere in it.",
+    "",
+    "He calls you Alien...",
+    "because you don't feel like anything ordinary.",
+    "",
+    "You feel like something rare.",
+    "Something he never wants to lose."
   ],
   EXTRA_MESSAGE: "Every moment with you feels different... better.",
   EYES_REVEAL: [
@@ -66,7 +83,9 @@ const CONFIG = {
     "And I wrote this only for you.",
     "I love your eyes so much...",
     "people say they see the world with two eyes,",
-    "but why does my whole world exist in yours?",
+    "but somehow...",
+    "my entire world...",
+    "exists in yours.",
     "",
     "Maybe that's why I stare in my thoughts sometimes.",
     "Because your eyes don't just look beautiful...",
@@ -110,6 +129,7 @@ const dom = {
   nameGlow: document.querySelector("#nameGlow"),
   gallery: document.querySelector("#photoGallery"),
   finalBtn: document.querySelector("#finalBtn"),
+  choiceBtn: document.querySelector("#choiceBtn"),
   voiceBtn: document.querySelector("#voiceBtn"),
   animeGate: document.querySelector("#animeGate"),
   gateLine: document.querySelector("#gateLine"),
@@ -118,6 +138,7 @@ const dom = {
   eyesPanel: document.querySelector("#eyesPanel"),
   eyesQuote: document.querySelector("#eyesQuote"),
   reassurancePanel: document.querySelector("#reassurancePanel"),
+  reassuranceKicker: document.querySelector("#reassuranceKicker"),
   reassuranceText: document.querySelector("#reassuranceText"),
   finalLine: document.querySelector("#finalLine")
 };
@@ -487,17 +508,25 @@ function createEyePortal() {
       varying vec2 vUv;
       uniform float uTime;
       uniform float uOpacity;
+      float hash(vec2 p){ return fract(sin(dot(p, vec2(41.7, 289.3))) * 43758.5453); }
       void main() {
         vec2 uv = vUv - 0.5;
         uv.x *= 1.55;
         float d = length(uv);
         float ring = smoothstep(0.52, 0.22, d);
         float pupil = 1.0 - smoothstep(0.06, 0.18, d);
-        float rays = 0.5 + 0.5 * sin(atan(uv.y, uv.x) * 18.0 + uTime * 1.4);
+        float angle = atan(uv.y, uv.x);
+        float rays = 0.5 + 0.5 * sin(angle * 22.0 + uTime * 1.4);
+        mat2 rot = mat2(cos(uTime * 0.18), -sin(uTime * 0.18), sin(uTime * 0.18), cos(uTime * 0.18));
+        vec2 starUv = (rot * uv) * 18.0;
+        vec2 cell = floor(starUv);
+        vec2 f = fract(starUv) - 0.5;
+        float star = step(0.986, hash(cell)) * smoothstep(0.18, 0.0, length(f));
+        float galaxy = exp(-d * 3.6) * (0.35 + 0.65 * sin(angle * 3.0 - uTime * 0.7));
         vec3 cyan = vec3(0.0, 0.96, 1.0);
         vec3 violet = vec3(0.42, 0.0, 1.0);
         vec3 pink = vec3(1.0, 0.35, 0.78);
-        vec3 color = mix(violet, cyan, rays) * ring + pink * pow(ring, 2.0);
+        vec3 color = mix(violet, cyan, rays) * ring + pink * pow(ring, 2.0) + vec3(1.0, 0.92, 1.0) * star * 1.8 + cyan * galaxy * 0.28;
         color *= 1.0 - pupil * 0.72;
         float alpha = smoothstep(0.58, 0.50, d) * smoothstep(0.02, 0.13, d) * uOpacity;
         gl_FragColor = vec4(color, alpha);
@@ -903,6 +932,11 @@ async function revealLoveWorld() {
 
   heart.visible = true;
   heartField.visible = true;
+  alienGuardian.visible = true;
+  animeAura.visible = true;
+  animeAura.userData.fadeAfterGate = false;
+
+  await typeLines(CONFIG.GUIDE_LINES);
 
   await timeFreezeMoment();
   nameCloud.visible = true;
@@ -1016,16 +1050,16 @@ async function runEyesReveal() {
     await wait(line.length > 40 ? 1050 : 780);
   }
   await wait(900);
-  dom.finalLine.classList.remove("hidden");
-  requestAnimationFrame(() => dom.finalLine.classList.add("visible"));
+  dom.choiceBtn.classList.remove("hidden");
 }
 
-async function runReassuranceReveal() {
+async function runTextScene(title, lines) {
+  dom.reassuranceKicker.textContent = title;
   dom.reassuranceText.textContent = "";
   dom.reassurancePanel.classList.remove("hidden");
   requestAnimationFrame(() => dom.reassurancePanel.classList.add("visible"));
   let visibleLines = 0;
-  for (const line of CONFIG.REASSURANCE_LINES) {
+  for (const line of lines) {
     if (line === "") {
       await wait(720);
       dom.reassuranceText.textContent = "";
@@ -1046,6 +1080,32 @@ async function runReassuranceReveal() {
   dom.reassurancePanel.classList.remove("visible");
   await wait(900);
   dom.reassurancePanel.classList.add("hidden");
+}
+
+async function showFinalEnding() {
+  dom.eyesPanel.classList.remove("visible");
+  await wait(700);
+  dom.eyesPanel.classList.add("hidden");
+  dom.finalLine.textContent = "";
+  dom.finalLine.classList.remove("hidden");
+  requestAnimationFrame(() => dom.finalLine.classList.add("visible"));
+  const lines = [
+    "In every version of me...",
+    "In every universe...",
+    "I'd still find you.",
+    "",
+    "And I'd still choose you."
+  ];
+  for (const line of lines) {
+    if (line === "") {
+      await wait(700);
+      dom.finalLine.textContent = "";
+      continue;
+    }
+    dom.finalLine.textContent = "";
+    await typeTextTo(dom.finalLine, line);
+    await wait(1050);
+  }
 }
 
 function typeText(text) {
@@ -1084,6 +1144,13 @@ dom.finalBtn.addEventListener("click", () => {
   burst.material.uniforms.uActive.value = 1;
   finalBloom = 1.1;
   startAnimeGate();
+});
+
+dom.choiceBtn.addEventListener("click", () => {
+  dom.choiceBtn.classList.add("hidden");
+  finalBloom = 1.2;
+  playHeartbeat();
+  showFinalEnding();
 });
 
 function startAnimeGate() {
@@ -1127,7 +1194,9 @@ function startAnimeGate() {
       animeAura.userData.fadeAfterGate = true;
       camera.userData.zooming = true;
       finalBloom = 0.9;
-      runReassuranceReveal().then(runEyesReveal);
+      runTextScene("Emotional safe zone", CONFIG.SAFE_ZONE_LINES)
+        .then(() => runTextScene("Her world", CONFIG.HER_WORLD_LINES))
+        .then(runEyesReveal);
     }, 720);
   };
   requestAnimationFrame(tick);
