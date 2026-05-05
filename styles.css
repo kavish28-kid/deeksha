@@ -245,6 +245,7 @@ button {
   backdrop-filter: blur(20px);
   box-shadow: 0 0 60px rgba(127, 0, 255, 0.24), 0 0 34px rgba(0, 245, 255, 0.12);
   transform-style: preserve-3d;
+  animation: animeCardPulse 2.4s ease-in-out infinite;
 }
 
 .anime-character {
@@ -380,6 +381,18 @@ button {
   box-shadow: inset 0 0 18px rgba(255, 159, 67, 0.14), 0 0 18px rgba(255, 115, 199, 0.08);
 }
 
+.anime-card::after {
+  content: "wind + fire reveal";
+  position: absolute;
+  right: 18px;
+  bottom: -34px;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  text-shadow: 0 0 16px rgba(255, 115, 199, 0.32);
+}
+
 .gate-progress {
   height: 10px;
   border-radius: 999px;
@@ -418,6 +431,41 @@ button {
   backdrop-filter: blur(18px);
   box-shadow: none;
   text-align: center;
+}
+
+.guide-bubble {
+  position: fixed;
+  left: clamp(16px, 5vw, 72px);
+  top: clamp(72px, 12vh, 130px);
+  width: min(86vw, 360px);
+  padding: 16px 18px;
+  border-left: 2px solid rgba(0, 245, 255, 0.52);
+  background: rgba(5, 5, 12, 0.34);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 0 38px rgba(0, 245, 255, 0.1), 0 0 44px rgba(255, 115, 199, 0.08);
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 700ms ease, transform 700ms ease;
+  z-index: 3;
+}
+
+.guide-bubble.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.guide-title {
+  color: var(--cyan);
+  font-size: 0.75rem;
+  font-weight: 900;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
+.guide-text {
+  color: #fff;
+  font-size: clamp(1rem, 3vw, 1.22rem);
+  line-height: 1.45;
 }
 
 .typewriter {
@@ -631,6 +679,12 @@ button {
   }
 }
 
+@keyframes animeCardPulse {
+  50% {
+    box-shadow: 0 0 70px rgba(0, 245, 255, 0.18), 0 0 62px rgba(255, 115, 199, 0.16);
+  }
+}
+
 @keyframes orbitSpin {
   to {
     transform: rotate(360deg);
@@ -713,6 +767,18 @@ button {
     max-height: 48vh;
     overflow: hidden;
     padding: 16px 10px;
+  }
+
+  .guide-bubble {
+    left: 50%;
+    top: 7vh;
+    width: 92vw;
+    text-align: center;
+    transform: translate(-50%, 12px);
+  }
+
+  .guide-bubble.visible {
+    transform: translate(-50%, 0);
   }
 
   .typewriter {

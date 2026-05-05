@@ -137,6 +137,8 @@ const dom = {
   messagePanel: document.querySelector("#messagePanel"),
   typewriter: document.querySelector("#typewriter"),
   nameGlow: document.querySelector("#nameGlow"),
+  guideBubble: document.querySelector("#guideBubble"),
+  guideText: document.querySelector("#guideText"),
   gallery: document.querySelector("#photoGallery"),
   finalBtn: document.querySelector("#finalBtn"),
   choiceBtn: document.querySelector("#choiceBtn"),
@@ -949,7 +951,7 @@ async function revealLoveWorld() {
   animeAura.visible = true;
   animeAura.userData.fadeAfterGate = false;
 
-  await typeLines(CONFIG.GUIDE_LINES);
+  await runGuideDialogue(CONFIG.GUIDE_LINES);
 
   await timeFreezeMoment();
   nameCloud.visible = true;
@@ -1000,6 +1002,21 @@ async function timeFreezeMoment() {
   if (ambientGain) ambientGain.gain.linearRampToValueAtTime(oldAmbientVolume || 0.012, audioCtx.currentTime + 0.8);
   dom.love.classList.remove("frozen");
   worldFrozen = false;
+}
+
+async function runGuideDialogue(lines) {
+  dom.guideText.textContent = "";
+  dom.guideBubble.classList.remove("hidden");
+  requestAnimationFrame(() => dom.guideBubble.classList.add("visible"));
+  for (const line of lines) {
+    dom.guideText.textContent = "";
+    await typeTextTo(dom.guideText, line);
+    await wait(line.length > 42 ? 1200 : 900);
+  }
+  await wait(700);
+  dom.guideBubble.classList.remove("visible");
+  await wait(700);
+  dom.guideBubble.classList.add("hidden");
 }
 
 function setupGallery() {
@@ -1218,6 +1235,9 @@ function startAnimeGate() {
     "Okay. This next part is only for her eyes."
   ];
   dom.messagePanel.classList.add("hidden");
+  dom.guideText.textContent = "Sanemi wind. Ace fire. Alien's own episode begins now.";
+  dom.guideBubble.classList.remove("hidden");
+  requestAnimationFrame(() => dom.guideBubble.classList.add("visible"));
   animeAura.visible = true;
   alienGuardian.visible = true;
   finalBloom = Math.max(finalBloom, 0.7);
@@ -1238,6 +1258,7 @@ function startAnimeGate() {
     dom.animeGate.classList.remove("visible");
     setTimeout(() => {
       dom.animeGate.classList.add("hidden");
+      dom.guideBubble.classList.remove("visible");
       eyePortal.visible = true;
       animeAura.userData.fadeAfterGate = true;
       camera.userData.zooming = true;
