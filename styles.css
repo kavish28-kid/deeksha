@@ -593,6 +593,27 @@ button {
   text-shadow: 0 0 16px rgba(255, 115, 199, 0.24), 0 0 30px rgba(0, 245, 255, 0.16);
 }
 
+.memory-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.memory-fragment {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  color: rgba(255, 255, 255, 0.58);
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: clamp(0.92rem, 2.4vw, 1.35rem);
+  white-space: nowrap;
+  text-shadow: 0 0 18px rgba(255, 115, 199, 0.28), 0 0 28px rgba(0, 245, 255, 0.14);
+  opacity: 0;
+  transform: translate3d(-50%, 18px, 0) scale(0.96);
+  animation: memoryFloat 8s ease forwards;
+}
+
 .hidden {
   opacity: 0;
   pointer-events: none;
@@ -639,6 +660,21 @@ button {
 
   95% {
     transform: scaleY(0.1);
+  }
+}
+
+@keyframes memoryFloat {
+  12% {
+    opacity: 0.56;
+  }
+
+  74% {
+    opacity: 0.42;
+  }
+
+  to {
+    opacity: 0;
+    transform: translate3d(-50%, -86px, 0) scale(1.04);
   }
 }
 

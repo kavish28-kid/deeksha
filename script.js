@@ -54,7 +54,7 @@ const CONFIG = {
   ],
   SAFE_ZONE_LINES: [
     "Sometimes you get quiet...",
-    "Sometimes you think too much...",
+    "Sometimes your thoughts don't stay quiet...",
     "Sometimes you doubt things...",
     "",
     "But even then...",
@@ -83,9 +83,10 @@ const CONFIG = {
     "And I wrote this only for you.",
     "I love your eyes so much...",
     "people say they see the world with two eyes,",
-    "but somehow...",
-    "my entire world...",
+    "but why does my whole world...",
     "exists in yours.",
+    "maybe...",
+    "because you became my world.",
     "",
     "Maybe that's why I stare in my thoughts sometimes.",
     "Because your eyes don't just look beautiful...",
@@ -99,6 +100,15 @@ const CONFIG = {
     "And if one day you forget how special you are,",
     "come back here.",
     "I'll let this universe remind you again."
+  ],
+  MEMORY_FRAGMENTS: [
+    "that one moment...",
+    "your smile...",
+    "the way you said my name...",
+    "the way you look at me...",
+    "your little reactions...",
+    "your anime rants...",
+    "the soft silence after a laugh..."
   ],
   MUSIC_URL: "./assets/shiddat-title-track.mp3",
   MUSIC_VOLUME: 0.28,
@@ -140,6 +150,7 @@ const dom = {
   reassurancePanel: document.querySelector("#reassurancePanel"),
   reassuranceKicker: document.querySelector("#reassuranceKicker"),
   reassuranceText: document.querySelector("#reassuranceText"),
+  memoryLayer: document.querySelector("#memoryLayer"),
   finalLine: document.querySelector("#finalLine")
 };
 
@@ -149,6 +160,7 @@ let audioCtx;
 let music;
 let ambientGain;
 let heartbeatTimer;
+let memoryTimer;
 let finalBloom = 0;
 let heartbeatPulse = 0;
 let worldFrozen = false;
@@ -929,6 +941,7 @@ async function revealLoveWorld() {
   dom.nameGlow.textContent = `${CONFIG.HER_NAME} ❤️`;
   setupGallery();
   setupVoice();
+  startMemoryFragments();
 
   heart.visible = true;
   heartField.visible = true;
@@ -965,7 +978,10 @@ async function revealLoveWorld() {
   ]);
   nameCloud.material.uniforms.uPulse.value = 1;
   dom.finalBtn.classList.remove("hidden");
-  if (CONFIG.VOICE_URL) dom.voiceBtn.classList.remove("hidden");
+  if (CONFIG.VOICE_URL) {
+    await typeLines(["I couldn't just type this..."]);
+    dom.voiceBtn.classList.remove("hidden");
+  }
 }
 
 async function timeFreezeMoment() {
@@ -1002,7 +1018,33 @@ function setupVoice() {
   if (!CONFIG.VOICE_URL) return;
   const voice = new Audio(CONFIG.VOICE_URL);
   voice.volume = 0.9;
-  dom.voiceBtn.addEventListener("click", () => voice.play().catch(() => {}));
+  dom.voiceBtn.textContent = "Play what I really wanted to say";
+  dom.voiceBtn.addEventListener("click", () => {
+    const before = music ? music.volume : CONFIG.MUSIC_VOLUME;
+    if (music) music.volume = Math.max(0.08, before * 0.45);
+    voice.currentTime = 0;
+    voice.play().catch(() => {});
+    voice.onended = () => {
+      if (music) music.volume = before;
+    };
+  });
+}
+
+// Floating memory fragments make the background feel like a private timeline.
+function startMemoryFragments() {
+  if (memoryTimer) return;
+  const spawn = () => {
+    if (sceneMode !== "love") return;
+    const el = document.createElement("span");
+    el.className = "memory-fragment";
+    el.textContent = CONFIG.MEMORY_FRAGMENTS[Math.floor(Math.random() * CONFIG.MEMORY_FRAGMENTS.length)];
+    el.style.setProperty("--x", `${THREE.MathUtils.randFloat(14, 86)}vw`);
+    el.style.setProperty("--y", `${THREE.MathUtils.randFloat(24, 82)}vh`);
+    dom.memoryLayer.appendChild(el);
+    setTimeout(() => el.remove(), 8200);
+  };
+  spawn();
+  memoryTimer = setInterval(spawn, isLowPower ? 6200 : 4100);
 }
 
 async function typeLines(lines) {
@@ -1094,6 +1136,8 @@ async function showFinalEnding() {
     "In every universe...",
     "I'd still find you.",
     "",
+    `${CONFIG.HER_NAME} ❤️`,
+    "",
     "And I'd still choose you."
   ];
   for (const line of lines) {
@@ -1149,6 +1193,7 @@ dom.finalBtn.addEventListener("click", () => {
 dom.choiceBtn.addEventListener("click", () => {
   dom.choiceBtn.classList.add("hidden");
   finalBloom = 1.2;
+  if (music) music.volume = Math.min(0.42, CONFIG.MUSIC_VOLUME + 0.1);
   playHeartbeat();
   showFinalEnding();
 });
@@ -1162,6 +1207,9 @@ function startAnimeGate() {
     "Sanemi wind check: courage level unlocked.",
     "Ace fire check: warmth level dangerous.",
     "Combining wind + fire into one Alien-only reveal.",
+    "He tried to hide it in all this...",
+    "but even I can see it clearly...",
+    "he really loves you.",
     "Imagine counting to seven... slowly.",
     "7... 6... 5...",
     "4... 3...",
