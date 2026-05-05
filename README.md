@@ -25,20 +25,20 @@ The experience starts with a playful fake AI patience test, then suddenly shifts
    - Typewriter text reveals the love message slowly.
    - Her name appears with a soft glow.
 
-5. **Anime Alien Tease**
-   - After the final button click, a tiny anime-inspired Alien AI character appears.
-   - It references Sanemi and Ace energy in a playful way.
-   - This adds one more fun delay before the deepest reveal.
+5. **Secret Anime Alien Tease**
+   - After the “genuinely love me” click, a tiny anime-inspired Alien assistant appears.
+   - It opens a “Secret file: Alien only” moment.
+   - It adds a playful countdown with Sanemi wind energy and Ace fire energy before the deepest reveal.
 
 6. **Eyes Reveal**
    - A glowing eye/iris portal appears in the 3D scene.
-   - The final quote reveals:
+   - The quote is built around the idea that her eyes hold the whole world:
 
    > To the right eyes, you are art.  
-   > And I swear...  
-   > I love your eyes so much.  
-   > People say they see the world with two eyes...  
-   > but somehow, my whole world is in yours.
+   > And I wrote this only for you.  
+   > I love your eyes so much...  
+   > people say they see the world with two eyes,  
+   > but why does my whole world exist in yours?
 
 7. **Final Line**
    - The experience ends with:
@@ -57,6 +57,7 @@ const CONFIG = {
   TEASE_SECONDS: 65,
   MAX_BUTTON_DODGES: 14,
   YOUR_MESSAGE: [
+    "This was only for you, Alien.",
     "Okay okay... I'll stop teasing you",
     "I just wanted to make you smile first...",
     "Because...",

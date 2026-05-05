@@ -12,6 +12,7 @@ const CONFIG = {
   TEASE_SECONDS: 65,
   MAX_BUTTON_DODGES: 14,
   YOUR_MESSAGE: [
+    "This was only for you, Alien.",
     "Okay okay... I'll stop teasing you",
     "I just wanted to make you smile first...",
     "Because...",
@@ -24,10 +25,14 @@ const CONFIG = {
   EXTRA_MESSAGE: "Every moment with you feels different... better.",
   EYES_REVEAL: [
     "To the right eyes, you are art.",
-    "And I swear...",
-    "I love your eyes so much.",
-    "People say they see the world with two eyes...",
-    "but somehow, my whole world is in yours."
+    "And I wrote this only for you.",
+    "I love your eyes so much...",
+    "people say they see the world with two eyes,",
+    "but why does my whole world exist in yours?",
+    "When I look at you, everything loud becomes quiet.",
+    "Like the universe finally found the place it was trying to reach.",
+    "Alien, your eyes are not just beautiful to me...",
+    "they feel like home."
   ],
   MUSIC_URL: "./assets/shiddat-title-track.mp3",
   MUSIC_VOLUME: 0.28,
@@ -61,6 +66,7 @@ const dom = {
   voiceBtn: document.querySelector("#voiceBtn"),
   animeGate: document.querySelector("#animeGate"),
   gateLine: document.querySelector("#gateLine"),
+  gateCount: document.querySelector("#gateCount"),
   gateProgress: document.querySelector("#gateProgress"),
   eyesPanel: document.querySelector("#eyesPanel"),
   eyesQuote: document.querySelector("#eyesQuote"),
@@ -95,7 +101,7 @@ renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.1;
 
 const composer = new EffectComposer(renderer);
-const bloomPass = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.75, 0.62, 0.12);
+const bloomPass = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.46, 0.54, 0.18);
 composer.addPass(new RenderPass(scene, camera));
 composer.addPass(bloomPass);
 composer.addPass(new FilmPass(0.16, false));
@@ -205,19 +211,21 @@ function createStars() {
     blending: THREE.AdditiveBlending,
     uniforms: {
       uTime: { value: 0 },
-      uOpacity: { value: 0 }
+      uOpacity: { value: 0 },
+      uBeat: { value: 0 }
     },
     vertexShader: `
       attribute float aSeed;
       uniform float uTime;
       uniform float uOpacity;
+      uniform float uBeat;
       varying float vSeed;
       void main() {
         vSeed = aSeed;
         vec3 p = position;
         p.z = mod(p.z + uTime * (2.0 + aSeed * 2.5), 170.0) - 135.0;
         vec4 mv = modelViewMatrix * vec4(p, 1.0);
-        gl_PointSize = (1.0 + aSeed * 2.6) * uOpacity * (70.0 / -mv.z);
+        gl_PointSize = (1.0 + aSeed * 2.6 + uBeat * 3.2) * uOpacity * (70.0 / -mv.z);
         gl_Position = projectionMatrix * mv;
       }
     `,
@@ -679,7 +687,8 @@ function playHeartbeat() {
     osc.stop(now + offset + 0.25);
   });
   heartbeatPulse = 1;
-  finalBloom = Math.max(finalBloom, 0.8);
+  finalBloom = Math.max(finalBloom, 0.46);
+  stars.material.uniforms.uBeat.value = 1;
   if (nameCloud.visible) nameCloud.material.uniforms.uPulse.value = Math.max(nameCloud.material.uniforms.uPulse.value, 1.25);
 }
 
@@ -690,11 +699,11 @@ async function revealLoveWorld() {
   setupGallery();
   setupVoice();
 
-  nameCloud.visible = true;
   heart.visible = true;
   heartField.visible = true;
 
   await timeFreezeMoment();
+  nameCloud.visible = true;
   animateUniform(nameCloud.material.uniforms.uProgress, 1, 5200, 350);
   playHeartbeat();
   heartbeatTimer = setInterval(() => {
@@ -720,6 +729,7 @@ async function revealLoveWorld() {
 
 async function timeFreezeMoment() {
   worldFrozen = true;
+  dom.love.classList.add("frozen");
   dom.typewriter.textContent = "";
   dom.nameGlow.classList.remove("visible");
   const oldMusicVolume = music ? music.volume : 0;
@@ -728,9 +738,10 @@ async function timeFreezeMoment() {
   if (ambientGain) ambientGain.gain.setValueAtTime(0, audioCtx.currentTime);
   await wait(500);
   dom.nameGlow.classList.add("visible");
-  await wait(1200);
+  await wait(1550);
   if (music) music.volume = oldMusicVolume;
   if (ambientGain) ambientGain.gain.linearRampToValueAtTime(oldAmbientVolume || 0.012, audioCtx.currentTime + 0.8);
+  dom.love.classList.remove("frozen");
   worldFrozen = false;
 }
 
@@ -755,12 +766,21 @@ function setupVoice() {
 
 async function typeLines(lines) {
   dom.typewriter.textContent = "";
+  let visibleLines = 0;
   for (const line of lines) {
     if (line === "") {
       await wait(760);
+      dom.typewriter.textContent = "";
+      visibleLines = 0;
       continue;
     }
-    await typeText(`${line}\n`);
+    if (visibleLines >= 2) {
+      dom.typewriter.textContent = "";
+      visibleLines = 0;
+    }
+    if (visibleLines > 0) dom.typewriter.textContent += "\n";
+    await typeText(line);
+    visibleLines += 1;
     await wait(line.length < 12 ? 620 : 960);
   }
 }
@@ -813,29 +833,35 @@ dom.finalBtn.addEventListener("click", () => {
   burst.visible = true;
   burst.material.uniforms.uTime.value = 0;
   burst.material.uniforms.uActive.value = 1;
-  finalBloom = 2.2;
+  finalBloom = 1.1;
   startAnimeGate();
 });
 
 function startAnimeGate() {
   const lines = [
-    `Hold on, ${CONFIG.NICKNAME}.`,
-    "You clicked too confidently.",
-    "Tiny anime assistant is judging your patience.",
-    `Consulting ${CONFIG.ANIME_MUSE} energy...`,
-    "Wind mode: dramatic.",
-    "Fire mode: too emotional.",
-    "Okay. This part is only for your eyes."
+    `Wait, ${CONFIG.NICKNAME}. Secret route detected.`,
+    "You clicked genuinely love me way too confidently.",
+    "Tiny anime AI is opening the forbidden feelings file.",
+    "Sanemi wind check: she survived the tease.",
+    "Ace fire check: emotional damage loading.",
+    "Imagine counting to seven... slowly.",
+    "7... 6... 5...",
+    "4... 3...",
+    "2...",
+    "1.",
+    "Okay. This next part is only for her eyes."
   ];
   dom.messagePanel.classList.add("hidden");
   dom.animeGate.classList.remove("hidden");
   requestAnimationFrame(() => dom.animeGate.classList.add("visible"));
   let start = performance.now();
-  const duration = 7600;
+  const duration = 12500;
   const tick = (now) => {
     const t = THREE.MathUtils.clamp((now - start) / duration, 0, 1);
     dom.gateProgress.style.width = `${Math.floor(t * 100)}%`;
     dom.gateLine.textContent = lines[Math.min(lines.length - 1, Math.floor(t * lines.length))];
+    const secondsLeft = Math.max(0, Math.ceil((duration - (now - start)) / 1000));
+    dom.gateCount.textContent = secondsLeft > 0 ? `Imagine counting... ${secondsLeft}` : "Opening the eye universe...";
     if (t < 1) {
       requestAnimationFrame(tick);
       return;
@@ -845,7 +871,7 @@ function startAnimeGate() {
       dom.animeGate.classList.add("hidden");
       eyePortal.visible = true;
       camera.userData.zooming = true;
-      finalBloom = 1.6;
+      finalBloom = 0.9;
       runEyesReveal();
     }, 720);
   };
@@ -936,7 +962,8 @@ function animate() {
 
   finalBloom = Math.max(0, finalBloom - delta * 1.4);
   heartbeatPulse = Math.max(0, heartbeatPulse - delta * 3.2);
-  bloomPass.strength = 0.75 + finalBloom;
+  stars.material.uniforms.uBeat.value = THREE.MathUtils.lerp(stars.material.uniforms.uBeat.value, 0, 0.08);
+  bloomPass.strength = 0.46 + finalBloom;
   nameCloud.material.uniforms.uPulse.value = THREE.MathUtils.lerp(nameCloud.material.uniforms.uPulse.value, 0, 0.035);
   composer.render();
   requestAnimationFrame(animate);
