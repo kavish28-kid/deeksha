@@ -346,12 +346,12 @@ button {
 .glass-panel {
   width: min(92vw, 720px);
   min-height: 180px;
-  padding: clamp(22px, 5vw, 38px);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  border-radius: 8px;
-  background: rgba(10, 8, 22, 0.34);
+  padding: clamp(12px, 4vw, 22px);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
   backdrop-filter: blur(18px);
-  box-shadow: 0 20px 70px rgba(0, 0, 0, 0.28);
+  box-shadow: none;
   text-align: center;
 }
 

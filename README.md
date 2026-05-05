@@ -51,7 +51,7 @@ Open `script.js` and edit the `CONFIG` section at the top:
 
 ```js
 const CONFIG = {
-  HER_NAME: "Her Name",
+  HER_NAME: "Alien",
   NICKNAME: "Alien",
   ANIME_MUSE: "Sanemi and Ace",
   TEASE_SECONDS: 65,
@@ -68,7 +68,7 @@ const CONFIG = {
   ],
   EXTRA_MESSAGE: "Every moment with you feels different... better.",
   MUSIC_URL: "./assets/shiddat-title-track.mp3",
-  MUSIC_VOLUME: 0.11,
+  MUSIC_VOLUME: 0.28,
   VOICE_URL: "",
   PHOTO_URLS: []
 };
@@ -82,7 +82,7 @@ Place your own legally available audio file at:
 assets/shiddat-title-track.mp3
 ```
 
-The volume is intentionally low so it feels emotional instead of overpowering.
+The volume is set to be clearly audible while still leaving room for the heartbeat and reveal.
 
 ### Voice Message
 

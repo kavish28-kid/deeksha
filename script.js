@@ -6,7 +6,7 @@ import { FilmPass } from "three/addons/postprocessing/FilmPass.js";
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 
 const CONFIG = {
-  HER_NAME: "Her Name",
+  HER_NAME: "Alien",
   NICKNAME: "Alien",
   ANIME_MUSE: "Sanemi and Ace",
   TEASE_SECONDS: 65,
@@ -30,7 +30,7 @@ const CONFIG = {
     "but somehow, my whole world is in yours."
   ],
   MUSIC_URL: "./assets/shiddat-title-track.mp3",
-  MUSIC_VOLUME: 0.11,
+  MUSIC_VOLUME: 0.28,
   VOICE_URL: "",
   PHOTO_URLS: []
 };
@@ -71,8 +71,11 @@ let sceneMode = "tease";
 let mouse = new THREE.Vector2();
 let audioCtx;
 let music;
+let ambientGain;
 let heartbeatTimer;
 let finalBloom = 0;
+let heartbeatPulse = 0;
+let worldFrozen = false;
 
 const scene = new THREE.Scene();
 scene.fog = new THREE.FogExp2(0x080617, 0.018);
@@ -637,10 +640,11 @@ async function beginAudio() {
   audioCtx = audioCtx || new AudioContext();
   const pad = audioCtx.createOscillator();
   const gain = audioCtx.createGain();
+  ambientGain = gain;
   pad.type = "sine";
   pad.frequency.value = 164.81;
   gain.gain.setValueAtTime(0, audioCtx.currentTime);
-  gain.gain.linearRampToValueAtTime(0.035, audioCtx.currentTime + 3);
+  gain.gain.linearRampToValueAtTime(0.012, audioCtx.currentTime + 3);
   pad.connect(gain).connect(audioCtx.destination);
   pad.start();
 
@@ -654,52 +658,80 @@ async function beginAudio() {
 
 function playHeartbeat() {
   if (!audioCtx) return;
-  const osc = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-  osc.type = "sine";
-  osc.frequency.setValueAtTime(58, audioCtx.currentTime);
-  gain.gain.setValueAtTime(0.0001, audioCtx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.09, audioCtx.currentTime + 0.025);
-  gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.22);
-  osc.connect(gain).connect(audioCtx.destination);
-  osc.start();
-  osc.stop(audioCtx.currentTime + 0.24);
+  const now = audioCtx.currentTime;
+  const master = audioCtx.createGain();
+  master.gain.value = 0.42;
+  master.connect(audioCtx.destination);
+  [0, 0.18].forEach((offset, index) => {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    const filter = audioCtx.createBiquadFilter();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(index === 0 ? 54 : 47, now + offset);
+    osc.frequency.exponentialRampToValueAtTime(index === 0 ? 32 : 29, now + offset + 0.18);
+    filter.type = "lowpass";
+    filter.frequency.value = 118;
+    gain.gain.setValueAtTime(0.0001, now + offset);
+    gain.gain.exponentialRampToValueAtTime(index === 0 ? 0.26 : 0.16, now + offset + 0.018);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + offset + 0.23);
+    osc.connect(filter).connect(gain).connect(master);
+    osc.start(now + offset);
+    osc.stop(now + offset + 0.25);
+  });
+  heartbeatPulse = 1;
+  finalBloom = Math.max(finalBloom, 0.8);
+  if (nameCloud.visible) nameCloud.material.uniforms.uPulse.value = Math.max(nameCloud.material.uniforms.uPulse.value, 1.25);
 }
 
-function revealLoveWorld() {
+async function revealLoveWorld() {
   dom.messagePanel.classList.remove("hidden");
   requestAnimationFrame(() => dom.messagePanel.classList.add("visible"));
   dom.nameGlow.textContent = `${CONFIG.HER_NAME} ❤️`;
   setupGallery();
   setupVoice();
-  typeLines([
+
+  nameCloud.visible = true;
+  heart.visible = true;
+  heartField.visible = true;
+
+  await timeFreezeMoment();
+  animateUniform(nameCloud.material.uniforms.uProgress, 1, 5200, 350);
+  playHeartbeat();
+  heartbeatTimer = setInterval(() => {
+    if (sceneMode === "love") {
+      playHeartbeat();
+    }
+  }, 1450);
+
+  await typeLines([
+    "Out of everything moving in this world...",
+    "you're the one that makes mine stop.",
+    "",
     "Okay okay... I'll stop teasing you ❤️",
     "I just wanted to make you smile first...",
     "",
     ...CONFIG.YOUR_MESSAGE,
     CONFIG.EXTRA_MESSAGE
   ]);
+  nameCloud.material.uniforms.uPulse.value = 1;
+  dom.finalBtn.classList.remove("hidden");
+  if (CONFIG.VOICE_URL) dom.voiceBtn.classList.remove("hidden");
+}
 
-  nameCloud.visible = true;
-  heart.visible = true;
-  heartField.visible = true;
-
-  animateUniform(nameCloud.material.uniforms.uProgress, 1, 5200, 2100);
-  setTimeout(() => {
-    nameCloud.material.uniforms.uPulse.value = 1;
-    dom.nameGlow.classList.add("visible");
-  }, 7600);
-  setTimeout(() => {
-    dom.finalBtn.classList.remove("hidden");
-    if (CONFIG.VOICE_URL) dom.voiceBtn.classList.remove("hidden");
-  }, 14500);
-
-  heartbeatTimer = setInterval(() => {
-    if (sceneMode === "love") {
-      finalBloom = Math.max(finalBloom, 0.55);
-      playHeartbeat();
-    }
-  }, 1450);
+async function timeFreezeMoment() {
+  worldFrozen = true;
+  dom.typewriter.textContent = "";
+  dom.nameGlow.classList.remove("visible");
+  const oldMusicVolume = music ? music.volume : 0;
+  const oldAmbientVolume = ambientGain ? ambientGain.gain.value : 0;
+  if (music) music.volume = 0;
+  if (ambientGain) ambientGain.gain.setValueAtTime(0, audioCtx.currentTime);
+  await wait(500);
+  dom.nameGlow.classList.add("visible");
+  await wait(1200);
+  if (music) music.volume = oldMusicVolume;
+  if (ambientGain) ambientGain.gain.linearRampToValueAtTime(oldAmbientVolume || 0.012, audioCtx.currentTime + 0.8);
+  worldFrozen = false;
 }
 
 function setupGallery() {
@@ -841,32 +873,40 @@ function animate() {
   const delta = clock.getDelta();
   const elapsed = clock.elapsedTime;
 
-  nebula.material.uniforms.uTime.value = elapsed;
-  stars.material.uniforms.uTime.value = elapsed;
-  nameCloud.material.uniforms.uTime.value = elapsed;
-  eyePortal.children[0].material.uniforms.uTime.value = elapsed;
+  if (!worldFrozen) {
+    nebula.material.uniforms.uTime.value = elapsed;
+    stars.material.uniforms.uTime.value = elapsed;
+    nameCloud.material.uniforms.uTime.value = elapsed;
+    eyePortal.children[0].material.uniforms.uTime.value = elapsed;
+  }
 
   glitchShapes.children.forEach((mesh, index) => {
     const speed = mesh.userData.speed;
-    mesh.rotation.x += delta * speed * 0.9;
-    mesh.rotation.y += delta * speed * 1.15;
-    mesh.position.y = mesh.userData.origin.y + Math.sin(elapsed * speed + index) * 0.28;
+    if (!worldFrozen) {
+      mesh.rotation.x += delta * speed * 0.9;
+      mesh.rotation.y += delta * speed * 1.15;
+      mesh.position.y = mesh.userData.origin.y + Math.sin(elapsed * speed + index) * 0.28;
+    }
     mesh.material.opacity = THREE.MathUtils.lerp(mesh.material.opacity, sceneMode === "tease" ? mesh.material.opacity : 0, 0.045);
   });
 
   if (sceneMode === "love") {
     stars.material.uniforms.uOpacity.value = THREE.MathUtils.lerp(stars.material.uniforms.uOpacity.value, 1, 0.018);
     nebula.material.uniforms.uOpacity.value = THREE.MathUtils.lerp(nebula.material.uniforms.uOpacity.value, 1, 0.014);
-    const breath = 1 + Math.sin(elapsed * 4.35) * 0.035 + Math.max(0, finalBloom) * 0.025;
+    const breath = 1 + Math.sin(elapsed * 4.35) * 0.024 + heartbeatPulse * 0.12 + Math.max(0, finalBloom) * 0.018;
     heart.scale.setScalar(THREE.MathUtils.lerp(heart.scale.x, 1.28 * breath, 0.045));
-    heart.rotation.y = Math.sin(elapsed * 0.42) * 0.32;
-    heart.rotation.x = Math.sin(elapsed * 0.31) * 0.11;
-    heart.material.emissiveIntensity = 1.65 + Math.max(0, finalBloom) * 1.2 + Math.sin(elapsed * 4.35) * 0.18;
+    if (!worldFrozen) {
+      heart.rotation.y = Math.sin(elapsed * 0.42) * 0.32;
+      heart.rotation.x = Math.sin(elapsed * 0.31) * 0.11;
+    }
+    heart.material.emissiveIntensity = 1.65 + heartbeatPulse * 1.7 + Math.max(0, finalBloom) * 1.05 + Math.sin(elapsed * 4.35) * 0.12;
     heartField.children.forEach((mesh) => {
       const seed = mesh.userData.seed;
-      mesh.position.y += delta * (0.08 + (seed % 5) * 0.012);
-      if (mesh.position.y > 6) mesh.position.y = -5.2;
-      mesh.rotation.z += delta * 0.08;
+      if (!worldFrozen) {
+        mesh.position.y += delta * (0.08 + (seed % 5) * 0.012);
+        if (mesh.position.y > 6) mesh.position.y = -5.2;
+        mesh.rotation.z += delta * 0.08;
+      }
       mesh.material.opacity = 0.18 + Math.sin(elapsed * 0.8 + seed) * 0.08;
     });
     if (eyePortal.visible) {
@@ -880,10 +920,12 @@ function animate() {
   }
 
   const driftZ = sceneMode === "love" ? -Math.min(4, elapsed * 0.035) : 0;
-  camera.position.x = THREE.MathUtils.lerp(camera.position.x, mouse.x * 0.7, 0.025);
-  camera.position.y = THREE.MathUtils.lerp(camera.position.y, 1.1 + -mouse.y * 0.35, 0.025);
-  camera.position.z = THREE.MathUtils.lerp(camera.position.z, camera.userData.zooming ? 13.2 : 18 + driftZ, 0.012);
-  camera.lookAt(mouse.x * 0.55, -0.05 - mouse.y * 0.18, -8);
+  if (!worldFrozen) {
+    camera.position.x = THREE.MathUtils.lerp(camera.position.x, mouse.x * 0.7, 0.025);
+    camera.position.y = THREE.MathUtils.lerp(camera.position.y, 1.1 + -mouse.y * 0.35, 0.025);
+    camera.position.z = THREE.MathUtils.lerp(camera.position.z, camera.userData.zooming ? 13.2 : 18 + driftZ, 0.012);
+    camera.lookAt(mouse.x * 0.55, -0.05 - mouse.y * 0.18, -8);
+  }
 
   if (burst.visible) {
     burst.material.uniforms.uTime.value += delta * 0.46;
@@ -893,6 +935,7 @@ function animate() {
   }
 
   finalBloom = Math.max(0, finalBloom - delta * 1.4);
+  heartbeatPulse = Math.max(0, heartbeatPulse - delta * 3.2);
   bloomPass.strength = 0.75 + finalBloom;
   nameCloud.material.uniforms.uPulse.value = THREE.MathUtils.lerp(nameCloud.material.uniforms.uPulse.value, 0, 0.035);
   composer.render();
