@@ -39,11 +39,26 @@ const CONFIG = {
     "it's because normal words felt too small for you."
   ],
   ANIME_LOVE_LINES: [
+    "I know you are a die-hard anime lover.",
+    "So I made this part feel like your own tiny episode.",
     "Sanemi has that storm kind of strength.",
     "Ace has that fire that refuses to disappear.",
     "And you, Alien...",
     "you somehow became both comfort and chaos to me.",
     "my soft place, my favorite trouble, my whole universe."
+  ],
+  REASSURANCE_LINES: [
+    "If your mind ever gets loud,",
+    "you don't have to explain every feeling perfectly.",
+    "",
+    "If you overthink, I'll slow down with you.",
+    "If you feel insecure, I'll remind you gently.",
+    "",
+    "If something breaks inside you,",
+    "I won't love you less for needing time.",
+    "",
+    "You are not too much, Alien.",
+    "You are someone I want to understand."
   ],
   EXTRA_MESSAGE: "Every moment with you feels different... better.",
   EYES_REVEAL: [
@@ -102,6 +117,8 @@ const dom = {
   gateProgress: document.querySelector("#gateProgress"),
   eyesPanel: document.querySelector("#eyesPanel"),
   eyesQuote: document.querySelector("#eyesQuote"),
+  reassurancePanel: document.querySelector("#reassurancePanel"),
+  reassuranceText: document.querySelector("#reassuranceText"),
   finalLine: document.querySelector("#finalLine")
 };
 
@@ -147,14 +164,16 @@ const glitchShapes = createGlitchShapes();
 const heart = createHeart();
 const heartField = createHeartField();
 const animeAura = createAnimeAura();
+const alienGuardian = createAlienGuardian();
 const eyePortal = createEyePortal();
 const nameCloud = createNameParticles(CONFIG.HER_NAME);
 const burst = createBurst();
-scene.add(nebula, stars, glitchShapes, heartField, animeAura, heart, eyePortal, nameCloud, burst);
+scene.add(nebula, stars, glitchShapes, heartField, animeAura, alienGuardian, heart, eyePortal, nameCloud, burst);
 
 heart.visible = false;
 heartField.visible = false;
 animeAura.visible = false;
+alienGuardian.visible = false;
 eyePortal.visible = false;
 nameCloud.visible = false;
 burst.visible = false;
@@ -582,6 +601,79 @@ function createAnimeAura() {
   return group;
 }
 
+function createAlienGuardian() {
+  const group = new THREE.Group();
+  const skin = new THREE.MeshStandardMaterial({
+    color: 0xf7d8ff,
+    emissive: 0x6c2bff,
+    emissiveIntensity: 0.25,
+    roughness: 0.42
+  });
+  const suit = new THREE.MeshStandardMaterial({
+    color: 0x20103f,
+    emissive: 0x00f5ff,
+    emissiveIntensity: 0.18,
+    roughness: 0.36
+  });
+  const glowCyan = new THREE.MeshBasicMaterial({ color: 0x00f5ff, transparent: true, opacity: 0.72, blending: THREE.AdditiveBlending });
+  const glowFire = new THREE.MeshBasicMaterial({ color: 0xff7a2f, transparent: true, opacity: 0.72, blending: THREE.AdditiveBlending });
+
+  const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.55, 1.1, 8, 18), suit);
+  body.position.y = -0.25;
+  group.add(body);
+
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.58, 32, 20), skin);
+  head.position.y = 0.8;
+  head.scale.set(1, 1.08, 0.92);
+  group.add(head);
+
+  const hair = new THREE.Mesh(new THREE.SphereGeometry(0.62, 32, 12, 0, Math.PI * 2, 0, Math.PI * 0.52), new THREE.MeshBasicMaterial({ color: 0x7f00ff }));
+  hair.position.y = 1.05;
+  hair.rotation.x = -0.24;
+  group.add(hair);
+
+  const eyeGeo = new THREE.SphereGeometry(0.075, 16, 8);
+  const eyeMat = new THREE.MeshBasicMaterial({ color: 0x0df7ff });
+  const leftEye = new THREE.Mesh(eyeGeo, eyeMat);
+  const rightEye = new THREE.Mesh(eyeGeo, eyeMat);
+  leftEye.position.set(-0.2, 0.82, 0.52);
+  rightEye.position.set(0.2, 0.82, 0.52);
+  group.add(leftEye, rightEye);
+
+  const antenna = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.018, 0.5, 8), glowCyan);
+  antenna.position.y = 1.48;
+  antenna.rotation.z = -0.18;
+  const antennaTip = new THREE.Mesh(new THREE.SphereGeometry(0.07, 16, 8), glowFire);
+  antennaTip.position.set(-0.06, 1.73, 0);
+  group.add(antenna, antennaTip);
+
+  const armGeo = new THREE.CapsuleGeometry(0.08, 0.7, 6, 12);
+  const leftArm = new THREE.Mesh(armGeo, skin);
+  const rightArm = new THREE.Mesh(armGeo, skin);
+  leftArm.position.set(-0.65, -0.15, 0);
+  rightArm.position.set(0.65, -0.15, 0);
+  leftArm.rotation.z = 0.38;
+  rightArm.rotation.z = -0.38;
+  group.add(leftArm, rightArm);
+
+  const windOrb = new THREE.Mesh(new THREE.SphereGeometry(0.18, 24, 12), glowCyan);
+  const fireOrb = new THREE.Mesh(new THREE.SphereGeometry(0.18, 24, 12), glowFire);
+  windOrb.userData.kind = "wind";
+  fireOrb.userData.kind = "fire";
+  group.add(windOrb, fireOrb);
+
+  const windTrail = new THREE.Mesh(new THREE.TorusGeometry(0.82, 0.012, 8, 80), glowCyan.clone());
+  const fireTrail = new THREE.Mesh(new THREE.TorusGeometry(1.06, 0.014, 8, 80), glowFire.clone());
+  windTrail.rotation.x = Math.PI / 2;
+  fireTrail.rotation.x = Math.PI / 2;
+  group.add(windTrail, fireTrail);
+
+  group.position.set(0, -0.25, -5.2);
+  group.scale.setScalar(0.01);
+  group.userData = { head, leftArm, rightArm, windOrb, fireOrb, windTrail, fireTrail, leftEye, rightEye };
+  return group;
+}
+
 function createBurst() {
   const count = isLowPower ? 1100 : 2400;
   const geometry = new THREE.BufferGeometry();
@@ -928,6 +1020,34 @@ async function runEyesReveal() {
   requestAnimationFrame(() => dom.finalLine.classList.add("visible"));
 }
 
+async function runReassuranceReveal() {
+  dom.reassuranceText.textContent = "";
+  dom.reassurancePanel.classList.remove("hidden");
+  requestAnimationFrame(() => dom.reassurancePanel.classList.add("visible"));
+  let visibleLines = 0;
+  for (const line of CONFIG.REASSURANCE_LINES) {
+    if (line === "") {
+      await wait(720);
+      dom.reassuranceText.textContent = "";
+      visibleLines = 0;
+      continue;
+    }
+    if (visibleLines >= 2) {
+      await wait(650);
+      dom.reassuranceText.textContent = "";
+      visibleLines = 0;
+    }
+    if (visibleLines > 0) dom.reassuranceText.textContent += "\n";
+    await typeTextTo(dom.reassuranceText, line);
+    visibleLines += 1;
+    await wait(line.length > 42 ? 1100 : 820);
+  }
+  await wait(900);
+  dom.reassurancePanel.classList.remove("visible");
+  await wait(900);
+  dom.reassurancePanel.classList.add("hidden");
+}
+
 function typeText(text) {
   return typeTextTo(dom.typewriter, text);
 }
@@ -971,6 +1091,7 @@ function startAnimeGate() {
     `Wait, ${CONFIG.NICKNAME}. Secret route detected.`,
     "You clicked genuinely love me way too confidently.",
     "Tiny anime AI is opening the forbidden feelings file.",
+    "Die-hard anime lover mode: activated.",
     "Sanemi wind check: courage level unlocked.",
     "Ace fire check: warmth level dangerous.",
     "Combining wind + fire into one Alien-only reveal.",
@@ -983,6 +1104,7 @@ function startAnimeGate() {
   ];
   dom.messagePanel.classList.add("hidden");
   animeAura.visible = true;
+  alienGuardian.visible = true;
   finalBloom = Math.max(finalBloom, 0.7);
   dom.animeGate.classList.remove("hidden");
   requestAnimationFrame(() => dom.animeGate.classList.add("visible"));
@@ -1005,7 +1127,7 @@ function startAnimeGate() {
       animeAura.userData.fadeAfterGate = true;
       camera.userData.zooming = true;
       finalBloom = 0.9;
-      runEyesReveal();
+      runReassuranceReveal().then(runEyesReveal);
     }, 720);
   };
   requestAnimationFrame(tick);
@@ -1089,6 +1211,22 @@ function animate() {
           mesh.material.opacity = THREE.MathUtils.lerp(mesh.material.opacity, targetOpacity * 0.22, 0.035);
         }
       });
+    }
+    if (alienGuardian.visible) {
+      const gateFade = animeAura.userData.fadeAfterGate ? 0.72 : 1;
+      alienGuardian.scale.setScalar(THREE.MathUtils.lerp(alienGuardian.scale.x, 1.05 * gateFade, 0.04));
+      alienGuardian.position.y = -0.25 + Math.sin(elapsed * 2.2) * 0.16;
+      alienGuardian.rotation.y = Math.sin(elapsed * 0.8) * 0.22 + mouse.x * 0.1;
+      alienGuardian.userData.head.rotation.x = Math.sin(elapsed * 1.7) * 0.06;
+      alienGuardian.userData.leftArm.rotation.z = 0.5 + Math.sin(elapsed * 2.7) * 0.24;
+      alienGuardian.userData.rightArm.rotation.z = -0.5 + Math.cos(elapsed * 2.9) * 0.24;
+      alienGuardian.userData.windOrb.position.set(Math.cos(elapsed * 2.2) * 1.05, 0.1 + Math.sin(elapsed * 2.2) * 0.34, Math.sin(elapsed * 2.2) * 0.55);
+      alienGuardian.userData.fireOrb.position.set(Math.cos(-elapsed * 2.0) * 1.2, -0.05 + Math.sin(-elapsed * 2.0) * 0.3, Math.sin(-elapsed * 2.0) * 0.55);
+      alienGuardian.userData.windTrail.rotation.z -= delta * 1.2;
+      alienGuardian.userData.fireTrail.rotation.z += delta * 1.45;
+      const blink = Math.sin(elapsed * 5.1) > 0.96 ? 0.18 : 1;
+      alienGuardian.userData.leftEye.scale.y = THREE.MathUtils.lerp(alienGuardian.userData.leftEye.scale.y, blink, 0.35);
+      alienGuardian.userData.rightEye.scale.y = THREE.MathUtils.lerp(alienGuardian.userData.rightEye.scale.y, blink, 0.35);
     }
   }
 
